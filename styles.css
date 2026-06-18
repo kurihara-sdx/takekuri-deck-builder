@@ -73,9 +73,12 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .dslot-fb{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface2);padding:4px;text-align:center}
 .dslot-fb .fb-name{font-size:9px;font-weight:600;line-height:1.2}
 .dslot-fb .fb-hp{font-size:14px;font-weight:800;color:var(--accent)}
-.dslot-count{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.8);color:#fff;font-size:18px;font-weight:800;min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;padding:0 4px;border-radius:8px;backdrop-filter:blur(4px);text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.dslot-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:var(--err);color:#fff;font-size:12px;display:none;align-items:center;justify-content:center;line-height:1}
-.dslot:hover .dslot-remove{display:flex}
+.dslot-controls{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:2px;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);padding:3px 0}
+.dslot-count{color:#fff;font-size:16px;font-weight:800;min-width:24px;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.dslot-minus,.dslot-plus{width:24px;height:24px;border-radius:50%;font-size:14px;font-weight:700;display:none;align-items:center;justify-content:center;color:#fff;cursor:pointer}
+.dslot-minus{background:var(--err)}
+.dslot-plus{background:var(--accent)}
+.dslot:hover .dslot-minus,.dslot:hover .dslot-plus{display:flex}
 
 /* ========== Filter Bar ========== */
 .filter-bar{padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:4px 8px}
@@ -117,10 +120,15 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .lcard-bottom{padding:5px 6px;background:var(--surface)}
 .lcard-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lcard-sub{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lcard-count{position:absolute;top:4px;right:4px;background:var(--gold);color:#000;font-size:10px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.lcard-add{position:absolute;bottom:28px;right:4px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:16px;font-weight:700;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.5)}
-.lcard:hover .lcard-add{display:flex}
-.lcard-add:hover{background:var(--accent2);transform:scale(1.1)}
+.lcard-count{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.7);color:#fff;font-size:28px;font-weight:900;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);text-shadow:0 2px 4px rgba(0,0,0,.8);pointer-events:none}
+.lcard-controls{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);padding:4px 0}
+.lcard-controls.hidden{display:none}
+.lcard-ctrl-count{color:#fff;font-size:16px;font-weight:800;min-width:24px;text-align:center}
+.lcard-minus,.lcard-plus{width:28px;height:28px;border-radius:50%;font-size:16px;font-weight:700;display:none;align-items:center;justify-content:center;color:#fff;cursor:pointer;border:none;background:none}
+.lcard-minus{background:var(--err)}
+.lcard-plus{background:var(--accent)}
+.lcard:hover .lcard-minus,.lcard:hover .lcard-plus{display:flex}
+.lcard-plus:hover{background:var(--accent2);transform:scale(1.1)}
 
 /* ========== Import Overlay ========== */
 .import-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:90;backdrop-filter:blur(3px)}
@@ -164,8 +172,10 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .mi-atk-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-bottom:2px}
 .mi-atk-head .dmg{color:var(--accent);font-size:15px}
 .mi-atk p{font-size:11px;color:var(--text2);line-height:1.5}
-.mi-actions{display:flex;gap:6px;margin-top:auto;padding-top:12px;flex-shrink:0}
-.mi-actions .btn{flex:1;cursor:pointer}
+.mi-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px;flex-shrink:0;align-items:center;justify-content:center}
+.mi-count{font-size:24px;font-weight:900;min-width:40px;text-align:center;color:var(--text)}
+.mi-minus,.mi-plus{width:48px;height:48px;border-radius:50%;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
+.mi-minus{cursor:pointer}.mi-plus{cursor:pointer}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -203,9 +213,9 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
     mask-image:linear-gradient(to right,black 85%,transparent 100%);-webkit-mask-image:linear-gradient(to right,black 85%,transparent 100%)}
   .dslot{scroll-snap-align:start}
 
-  /* Library: always show +/× buttons (no hover on touch) */
-  .lcard-add{display:flex;width:32px;height:32px;font-size:18px}
-  .dslot-remove{display:flex;width:24px;height:24px}
+  /* Library & deck: always show +/− buttons on touch */
+  .lcard-minus,.lcard-plus{display:flex}
+  .dslot-minus,.dslot-plus{display:flex}
 
   /* Library cards */
   .lib-cards{gap:6px;padding:6px 8px}

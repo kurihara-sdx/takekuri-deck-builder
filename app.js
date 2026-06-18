@@ -237,8 +237,12 @@ function renderDeckZone(){
     const inner=url?`<img src="${esc(url)}" alt="${esc(card.name)}" onerror="this.style.display='none'">`
       :`<div class="dslot-fb"><div class="fb-hp">${esc(card.hp)}</div><div class="fb-name">${esc(card.name)}</div></div>`;
     return`<div class="dslot" data-id="${card.id}" title="${esc(card.name)} x${count}">
-      ${inner}<span class="dslot-count">${count}</span>
-      <button class="dslot-remove" data-deck-remove="${card.id}">−</button>
+      ${inner}
+      <div class="dslot-controls">
+        <button class="dslot-minus" data-deck-remove="${card.id}">−</button>
+        <span class="dslot-count">${count}</span>
+        <button class="dslot-plus" data-add="${card.id}">＋</button>
+      </div>
     </div>`;
   }).join(''):`<div style="display:flex;align-items:center;justify-content:center;width:100%;color:var(--text3);font-size:12px">${L().empty}</div>`;
 }
@@ -263,12 +267,16 @@ function cardHtml(card){
   return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
     <div class="lcard-img-wrap">${imgHtml(card,'lcard-img')}
       ${count?`<span class="lcard-count">${count}</span>`:''}
+      <div class="lcard-controls ${count?'':'hidden'}">
+        <button class="lcard-minus" data-remove="${card.id}">−</button>
+        <span class="lcard-ctrl-count">${count}</span>
+        <button class="lcard-plus" data-add="${card.id}">＋</button>
+      </div>
     </div>
     <div class="lcard-bottom">
       <div class="lcard-name">${esc(card.name)}</div>
       <div class="lcard-sub">${card.hp?'HP'+card.hp+' ':''}${esc(card.kind)}</div>
     </div>
-    <button class="lcard-add" data-add="${card.id}">＋</button>
   </div>`;
 }
 
@@ -316,12 +324,17 @@ function updateLibCardBadge(id){
   if(!el)return;
   const count=state.deck.get(id)||0;
   el.classList.toggle('in-deck',count>0);
-  const wrap=el.querySelector('.lcard-img-wrap');
   let badge=el.querySelector('.lcard-count');
   if(count>0){
     if(badge)badge.textContent=count;
-    else{badge=document.createElement('span');badge.className='lcard-count';badge.textContent=count;wrap.appendChild(badge)}
+    else{const wrap=el.querySelector('.lcard-img-wrap');badge=document.createElement('span');badge.className='lcard-count';badge.textContent=count;wrap.appendChild(badge)}
   }else if(badge)badge.remove();
+  const controls=el.querySelector('.lcard-controls');
+  if(controls){
+    controls.classList.toggle('hidden',count===0);
+    const ctrlCount=controls.querySelector('.lcard-ctrl-count');
+    if(ctrlCount)ctrlCount.textContent=count;
+  }
 }
 
 function validate(){
@@ -359,8 +372,9 @@ function showModal(card){
     ${!card.attacks.length&&card.effects.length?`<p style="font-size:11px;color:var(--text2);line-height:1.5">${esc(card.effects[0])}</p>`:''}
     <div style="font-size:10px;color:var(--text3);margin-top:6px">${card.weakness?'弱点:'+esc(card.weakness)+' ':''}${card.resistance?'抵抗:'+esc(card.resistance)+' ':''}${card.retreat?'逃げ:'+esc(card.retreat):''}</div>
     <div class="mi-actions">
-      <button class="btn btn-primary" data-modal-add="${card.id}" ${canAdd(card)?'':'disabled'}>${l.addToDeck}</button>
-      <button class="btn btn-ghost" data-modal-remove="${card.id}">${l.removeOne}</button>
+      <button class="btn btn-ghost mi-minus" data-modal-remove="${card.id}">−</button>
+      <span class="mi-count">${state.deck.get(card.id)||0}</span>
+      <button class="btn btn-primary mi-plus" data-modal-add="${card.id}" ${canAdd(card)?'':'disabled'}>＋</button>
     </div>`;
   $('modal').hidden=false;
   $('buildScreen').classList.add('modal-open');
@@ -532,6 +546,8 @@ function bindEvents(){
   document.body.addEventListener('click',e=>{
     const addBtn=e.target.closest('[data-add]');
     if(addBtn){e.stopPropagation();addCard(Number(addBtn.dataset.add));return}
+    const remBtn=e.target.closest('[data-remove]');
+    if(remBtn){e.stopPropagation();removeCard(Number(remBtn.dataset.remove));return}
     const deckRem=e.target.closest('[data-deck-remove]');
     if(deckRem){e.stopPropagation();removeCard(Number(deckRem.dataset.deckRemove));return}
     const modalAdd=e.target.closest('[data-modal-add]');
