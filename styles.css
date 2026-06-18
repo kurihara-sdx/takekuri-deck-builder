@@ -173,9 +173,63 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--text2)}
 
+/* Filter toggle (mobile) */
+.filter-toggle{display:none;padding:6px 0;font-size:12px;font-weight:600;color:var(--text2);background:none;border:none;cursor:pointer}
+.filter-toggle::before{content:'▼ ';font-size:10px}
+.filter-toggle.open::before{content:'▲ '}
+.filter-collapsible{display:contents}
+
 @media(max-width:700px){
-  .modal-card{flex-direction:column;padding:16px}
-  .modal-img{width:100%;max-width:220px;align-self:center}
-  :root{--card-w:120px;--card-h:168px;--card-sm-w:90px;--card-sm-h:126px}
+  :root{--card-w:120px;--card-h:168px;--card-sm-w:80px;--card-sm-h:112px}
+
+  /* Filter bar: stack, search always visible, buttons collapsible */
+  .filter-bar{display:flex;flex-direction:column;gap:4px;padding:6px 10px}
+  .search-input{grid-row:auto;width:100%;font-size:16px;padding:10px 12px}
+  .filter-toggle{display:block}
+  .filter-collapsible{display:none}
+  .filter-collapsible.open{display:contents}
+  .filter-row{gap:6px}
+  .ftag,.ttag{padding:8px 14px;font-size:13px;min-height:36px;display:inline-flex;align-items:center;justify-content:center}
+
+  /* Build header */
+  .build-header{flex-wrap:wrap;padding:6px 8px;gap:4px}
+  .deck-name-input{order:2;width:100%;font-size:14px}
+  .build-header-right{gap:4px}
+  .build-header-right .btn{padding:6px 10px;font-size:11px}
+
+  /* Deck zone: touch scroll */
+  .deck-zone{padding:6px 8px}
+  .deck-cards{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding-bottom:4px;
+    mask-image:linear-gradient(to right,black 85%,transparent 100%);-webkit-mask-image:linear-gradient(to right,black 85%,transparent 100%)}
+  .dslot{scroll-snap-align:start}
+
+  /* Library: always show +/× buttons (no hover on touch) */
+  .lcard-add{display:flex;width:32px;height:32px;font-size:18px}
+  .dslot-remove{display:flex;width:24px;height:24px}
+
+  /* Library cards */
+  .lib-cards{gap:6px;padding:6px 8px}
+  .lcard-bottom{padding:4px 5px}
+  .lcard-name{font-size:11px}
+  .lcard-sub{font-size:9px}
+
+  /* Modal: no image on mobile */
+  .modal-card{flex-direction:column;padding:12px;height:auto;max-height:90vh;overflow-y:auto}
+  .modal-img{display:none}
+  .mi-actions .btn{min-height:44px;font-size:14px}
+
+  /* Deck list */
   .deck-card{width:100%}
+  .list-header{padding:12px 16px}
+  .list-body{padding:12px;gap:12px}
+  .new-deck-card{width:100%;height:100px}
+}
+
+@media(max-width:480px){
+  :root{
+    --card-w:calc((100vw - 42px) / 3);
+    --card-h:calc(var(--card-w) * 1.4);
+    --card-sm-w:70px;--card-sm-h:98px;
+  }
+  .ftag,.ttag{padding:6px 10px;font-size:12px;min-height:34px}
 }

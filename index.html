@@ -70,26 +70,29 @@
   <!-- Filter Bar -->
   <div class="filter-bar">
     <input id="searchInput" type="search" class="search-input" placeholder="カード名 / ID / 効果">
-    <div class="filter-row">
-      <button class="ftag" data-cat="pokemon">ポケモン</button>
-      <button class="ftag" data-cat="ex">ex</button>
-      <button class="ftag" data-cat="supporter">サポート</button>
-      <button class="ftag" data-cat="goods">グッズ</button>
-      <button class="ftag" data-cat="tool">どうぐ</button>
-      <button class="ftag" data-cat="stadium">スタジアム</button>
-      <button class="ftag" data-cat="energy">エネルギー</button>
-    </div>
-    <div class="filter-row type-row">
-      <button class="ttag t-grass" data-type="grass">草</button>
-      <button class="ttag t-fire" data-type="fire">炎</button>
-      <button class="ttag t-water" data-type="water">水</button>
-      <button class="ttag t-lightning" data-type="lightning">雷</button>
-      <button class="ttag t-psychic" data-type="psychic">超</button>
-      <button class="ttag t-fighting" data-type="fighting">闘</button>
-      <button class="ttag t-dark" data-type="dark">悪</button>
-      <button class="ttag t-metal" data-type="metal">鋼</button>
-      <button class="ttag t-dragon" data-type="dragon">竜</button>
-      <button class="ttag t-colorless" data-type="colorless">無</button>
+    <button id="filterToggle" class="filter-toggle">フィルター</button>
+    <div id="filterCollapsible" class="filter-collapsible">
+      <div class="filter-row">
+        <button class="ftag" data-cat="pokemon">ポケモン</button>
+        <button class="ftag" data-cat="ex">ex</button>
+        <button class="ftag" data-cat="supporter">サポート</button>
+        <button class="ftag" data-cat="goods">グッズ</button>
+        <button class="ftag" data-cat="tool">どうぐ</button>
+        <button class="ftag" data-cat="stadium">スタジアム</button>
+        <button class="ftag" data-cat="energy">エネルギー</button>
+      </div>
+      <div class="filter-row type-row">
+        <button class="ttag t-grass" data-type="grass">草</button>
+        <button class="ttag t-fire" data-type="fire">炎</button>
+        <button class="ttag t-water" data-type="water">水</button>
+        <button class="ttag t-lightning" data-type="lightning">雷</button>
+        <button class="ttag t-psychic" data-type="psychic">超</button>
+        <button class="ttag t-fighting" data-type="fighting">闘</button>
+        <button class="ttag t-dark" data-type="dark">悪</button>
+        <button class="ttag t-metal" data-type="metal">鋼</button>
+        <button class="ttag t-dragon" data-type="dragon">竜</button>
+        <button class="ttag t-colorless" data-type="colorless">無</button>
+      </div>
     </div>
   </div>
 

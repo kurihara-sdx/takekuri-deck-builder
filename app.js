@@ -1,4 +1,10 @@
 const MAX_DECK = 60;
+const CARD_PAGE_SIZE = 40;
+
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
 const EN_SET_MAP = {
   SVE:'sve',SVI:'sv1',PAL:'sv2',TEF:'sv5',TWM:'sv6',SFA:'sv6pt5',
   SCR:'sv7',SSP:'sv8',PRE:'sv8pt5',JTG:'sv9',DRI:'sv10',
@@ -43,6 +49,7 @@ const state = {
   decks:[], currentDeckIdx:-1,
   deck:new Map(),
   query:'', activeCats:new Set(), activeTypes:new Set(),
+  currentVisible:[], renderedCount:0,
 };
 
 const $=id=>document.getElementById(id);
@@ -136,8 +143,8 @@ function canAdd(card){
   if(isAceSpec(card)&&aceSpecCount()>=1)return false;
   return isBasicEnergy(card)||countByName(card.name)<4;
 }
-function addCard(id){const card=state.byId.get(id);if(!canAdd(card))return;state.deck.set(id,(state.deck.get(id)||0)+1);renderBuilder()}
-function removeCard(id){const cur=state.deck.get(id)||0;if(cur<=1)state.deck.delete(id);else state.deck.set(id,cur-1);renderBuilder()}
+function addCard(id){const card=state.byId.get(id);if(!canAdd(card))return;state.deck.set(id,(state.deck.get(id)||0)+1);renderDeckZone();updateLibCardBadge(id)}
+function removeCard(id){const cur=state.deck.get(id)||0;if(cur<=1)state.deck.delete(id);else state.deck.set(id,cur-1);renderDeckZone();updateLibCardBadge(id)}
 
 /* ===== Deck Storage ===== */
 function loadDecks(){try{state.decks=JSON.parse(localStorage.getItem('ptcg-decks'))||[]}catch{state.decks=[]}}
@@ -167,9 +174,9 @@ function visibleCards(){
 function imgHtml(card,cls=''){
   const url=card.imgUrl;
   if(!url||brokenImgs.has(url))return fallbackHtml(card);
-  return`<img class="${cls} loading" src="${esc(url)}" alt="${esc(card.name)}" loading="lazy"
+  return`<img class="${cls} loading" data-src="${esc(url)}" alt="${esc(card.name)}"
     onload="this.classList.remove('loading');this.classList.add('loaded')"
-    onerror="this.classList.add('error');brokenImgs.add(this.src);this.nextElementSibling.style.display='flex'">
+    onerror="this.classList.add('error');brokenImgs.add(this.dataset.src);this.nextElementSibling.style.display='flex'">
     <div class="lcard-fb" style="display:none"><div class="fb-hp">${esc(card.hp)}</div><div class="fb-name">${esc(card.name)}</div></div>`;
 }
 function fallbackHtml(card){
@@ -202,6 +209,11 @@ function renderList(){
 
 /* ===== Rendering: Builder Screen ===== */
 function renderBuilder(){
+  renderDeckZone();
+  renderLibrary();
+}
+
+function renderDeckZone(){
   const total=deckTotal();
   const l=L();
 
@@ -214,7 +226,6 @@ function renderBuilder(){
   $('csvBtn').disabled=!(total===MAX_DECK&&!hasErr);
   $('deckValidation').innerHTML=msgs.map(m=>`<span class="v-${m.lv}">${esc(m.text)}</span>`).join(' · ');
 
-  // Deck cards
   const rows=[...state.deck.entries()].map(([id,count])=>({card:state.byId.get(id),count})).filter(e=>e.card);
   rows.sort((a,b)=>{
     const ca=a.card.cats.includes('pokemon')?0:a.card.cats.includes('energy')?2:1;
@@ -229,28 +240,88 @@ function renderBuilder(){
       ${inner}<span class="dslot-count">${count}</span>
       <button class="dslot-remove" data-deck-remove="${card.id}">−</button>
     </div>`;
-  }).join(''):`<div style="display:flex;align-items:center;justify-content:center;width:100%;color:var(--text3);font-size:12px">${l.empty}</div>`;
-
-  renderLibrary();
+  }).join(''):`<div style="display:flex;align-items:center;justify-content:center;width:100%;color:var(--text3);font-size:12px">${L().empty}</div>`;
 }
+
+/* ===== Rendering: Library (incremental) ===== */
+let scrollSentinel=null;
+let sentinelObserver=null;
+let imgObserver=null;
 
 function renderLibrary(){
   const cards=visibleCards();
+  state.currentVisible=cards;
+  state.renderedCount=0;
   $('libStatus').textContent=L().showing(cards.length,state.cards.length);
+  $('libCards').innerHTML='';
+  if(scrollSentinel){scrollSentinel.remove();scrollSentinel=null}
+  appendCardBatch();
+}
 
-  $('libCards').innerHTML=cards.map(card=>{
-    const count=state.deck.get(card.id)||0;
-    return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
-      <div class="lcard-img-wrap">${imgHtml(card,'lcard-img')}
-        ${count?`<span class="lcard-count">${count}</span>`:''}
-      </div>
-      <div class="lcard-bottom">
-        <div class="lcard-name">${esc(card.name)}</div>
-        <div class="lcard-sub">${card.hp?'HP'+card.hp+' ':''}${esc(card.kind)}</div>
-      </div>
-      <button class="lcard-add" data-add="${card.id}">＋</button>
-    </div>`;
-  }).join('');
+function cardHtml(card){
+  const count=state.deck.get(card.id)||0;
+  return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
+    <div class="lcard-img-wrap">${imgHtml(card,'lcard-img')}
+      ${count?`<span class="lcard-count">${count}</span>`:''}
+    </div>
+    <div class="lcard-bottom">
+      <div class="lcard-name">${esc(card.name)}</div>
+      <div class="lcard-sub">${card.hp?'HP'+card.hp+' ':''}${esc(card.kind)}</div>
+    </div>
+    <button class="lcard-add" data-add="${card.id}">＋</button>
+  </div>`;
+}
+
+function appendCardBatch(){
+  const batch=state.currentVisible.slice(state.renderedCount,state.renderedCount+CARD_PAGE_SIZE);
+  if(!batch.length)return;
+  const html=batch.map(cardHtml).join('');
+  $('libCards').insertAdjacentHTML('beforeend',html);
+  state.renderedCount+=batch.length;
+  observeNewImages();
+  setupScrollSentinel();
+}
+
+function setupScrollSentinel(){
+  if(scrollSentinel){scrollSentinel.remove();scrollSentinel=null}
+  if(state.renderedCount>=state.currentVisible.length)return;
+  scrollSentinel=document.createElement('div');
+  scrollSentinel.style.height='1px';
+  $('libCards').appendChild(scrollSentinel);
+  if(!sentinelObserver){
+    sentinelObserver=new IntersectionObserver(entries=>{
+      if(entries[0].isIntersecting)appendCardBatch();
+    },{root:document.querySelector('.library-zone'),rootMargin:'200px'});
+  }
+  sentinelObserver.observe(scrollSentinel);
+}
+
+function observeNewImages(){
+  if(!imgObserver){
+    imgObserver=new IntersectionObserver(entries=>{
+      for(const e of entries){
+        if(e.isIntersecting){
+          const img=e.target;
+          if(img.dataset.src){img.src=img.dataset.src;delete img.dataset.src}
+          imgObserver.unobserve(img);
+        }
+      }
+    },{root:document.querySelector('.library-zone'),rootMargin:'100px'});
+  }
+  for(const img of $('libCards').querySelectorAll('img[data-src]'))imgObserver.observe(img);
+}
+
+function updateLibCardBadge(id){
+  const el=$('libCards').querySelector(`.lcard[data-id="${id}"]`);
+  if(!el)return;
+  const count=state.deck.get(id)||0;
+  el.classList.toggle('in-deck',count>0);
+  const wrap=el.querySelector('.lcard-img-wrap');
+  let badge=el.querySelector('.lcard-count');
+  if(count>0){
+    if(badge)badge.textContent=count;
+    else{badge=document.createElement('span');badge.className='lcard-count';badge.textContent=count;wrap.appendChild(badge)}
+  }else if(badge)badge.remove();
 }
 
 function validate(){
@@ -430,7 +501,15 @@ function bindEvents(){
   });
 
   // Filter bar
-  $('searchInput').addEventListener('input',e=>{state.query=e.target.value.trim();renderLibrary()});
+  const debouncedSearch=debounce(()=>{state.query=$('searchInput').value.trim();renderLibrary()},150);
+  $('searchInput').addEventListener('input',debouncedSearch);
+
+  // Filter toggle (mobile)
+  $('filterToggle').addEventListener('click',()=>{
+    const el=$('filterCollapsible');
+    el.classList.toggle('open');
+    $('filterToggle').classList.toggle('open');
+  });
 
   document.querySelectorAll('.ftag').forEach(btn=>{
     btn.addEventListener('click',()=>{
