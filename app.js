@@ -68,7 +68,7 @@ function clean(v){const s=(v||'').trim();return s==='n/a'?'':s}
 
 /* ===== Image Map ===== */
 async function buildImageMap(){
-  for(let id=1;id<=1267;id++)imgUrlById.set(id,`cards/${id}.jpg`);
+  for(let id=1;id<=1267;id++)imgUrlById.set(id,`cards/${id}.jpg?v=2`);
 }
 
 /* ===== Card Categories ===== */
