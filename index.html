@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PTCG Deck Builder</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== Deck List Screen ===== -->
+<div id="listScreen" class="screen">
+  <header class="list-header">
+    <h1>PTCG Deck Builder</h1>
+    <div class="list-header-actions">
+      <button id="importDeckBtn" class="btn btn-ghost">読み込み</button>
+      <select id="langSelect" class="sel-sm">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+  </header>
+  <div class="list-body">
+    <div id="deckGrid" class="deck-grid"></div>
+    <button id="newDeckBtn" class="new-deck-card">
+      <span class="new-deck-icon">＋</span>
+      <span>新しいデッキ</span>
+    </button>
+  </div>
+</div>
+
+<!-- Import Deck Overlay -->
+<div id="listImportOverlay" class="import-overlay" hidden>
+  <div class="import-box">
+    <h3>デッキ読み込み</h3>
+    <p class="import-desc">CSVファイルをアップロード、またはカードIDをカンマ区切り/1行1IDで入力</p>
+    <div class="import-file-row">
+      <label class="btn btn-ghost import-file-label" for="csvFileInput">CSVファイルを選択</label>
+      <input id="csvFileInput" type="file" accept=".csv,.txt" hidden>
+      <span id="csvFileName" class="import-file-name"></span>
+    </div>
+    <textarea id="listImportArea" rows="6" placeholder="例: 486,486,486,486,5,5,5,5&#10;または1行ずつ:&#10;486&#10;486&#10;5"></textarea>
+    <div class="import-actions">
+      <button id="listImportApply" class="btn btn-primary">デッキ作成</button>
+      <button id="listImportCancel" class="btn btn-ghost">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Builder Screen ===== -->
+<div id="buildScreen" class="screen" hidden>
+  <header class="build-header">
+    <button id="backBtn" class="btn-icon">←</button>
+    <input id="deckNameInput" class="deck-name-input" value="新しいデッキ" spellcheck="false">
+    <div class="build-header-right">
+      <span id="deckBadge" class="deck-badge">0/60</span>
+      <button id="shareBtn" class="btn btn-ghost">共有</button>
+      <button id="saveBtn" class="btn btn-ghost">保存</button>
+      <button id="csvBtn" class="btn btn-primary" disabled>deck.csv</button>
+    </div>
+  </header>
+
+  <!-- Deck Zone -->
+  <div class="deck-zone">
+    <div class="deck-zone-label">DECK <span id="deckZoneCount">0</span>/60</div>
+    <div id="deckCards" class="deck-cards"></div>
+    <div id="deckValidation" class="deck-validation"></div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input id="searchInput" type="search" class="search-input" placeholder="カード名 / ID / 効果">
+    <div class="filter-row">
+      <button class="ftag" data-cat="pokemon">ポケモン</button>
+      <button class="ftag" data-cat="ex">ex</button>
+      <button class="ftag" data-cat="supporter">サポート</button>
+      <button class="ftag" data-cat="goods">グッズ</button>
+      <button class="ftag" data-cat="tool">どうぐ</button>
+      <button class="ftag" data-cat="stadium">スタジアム</button>
+      <button class="ftag" data-cat="energy">エネルギー</button>
+    </div>
+    <div class="filter-row type-row">
+      <button class="ttag t-grass" data-type="grass">草</button>
+      <button class="ttag t-fire" data-type="fire">炎</button>
+      <button class="ttag t-water" data-type="water">水</button>
+      <button class="ttag t-lightning" data-type="lightning">雷</button>
+      <button class="ttag t-psychic" data-type="psychic">超</button>
+      <button class="ttag t-fighting" data-type="fighting">闘</button>
+      <button class="ttag t-dark" data-type="dark">悪</button>
+      <button class="ttag t-metal" data-type="metal">鋼</button>
+      <button class="ttag t-dragon" data-type="dragon">竜</button>
+      <button class="ttag t-colorless" data-type="colorless">無</button>
+    </div>
+  </div>
+
+  <!-- Library -->
+  <div class="library-zone">
+    <div id="libStatus" class="lib-status">読み込み中...</div>
+    <div id="libCards" class="lib-cards"></div>
+  </div>
+
+  <!-- Import overlay -->
+  <div id="importOverlay" class="import-overlay" hidden>
+    <div class="import-box">
+      <h3>deck.csv インポート</h3>
+      <textarea id="importArea" rows="6" placeholder="カードIDを1行ずつ or カンマ区切り"></textarea>
+      <div class="import-actions">
+        <button id="importApply" class="btn btn-primary">反映</button>
+        <button id="importCancel" class="btn btn-ghost">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Share Overlay -->
+<div id="shareOverlay" class="share-overlay" hidden>
+  <div class="share-box">
+    <button class="share-x" id="shareX">&times;</button>
+    <h3>デッキを共有</h3>
+    <p class="share-desc">URLまたはQRコードで共有できます</p>
+    <div class="share-url-row">
+      <input id="shareUrl" class="share-url-input" readonly>
+      <button id="copyUrlBtn" class="btn btn-primary">コピー</button>
+    </div>
+    <div class="share-qr">
+      <img id="shareQr" alt="QR Code">
+    </div>
+  </div>
+</div>
+
+<!-- Card Detail Modal -->
+<div id="modal" class="modal-overlay" hidden>
+  <div class="modal-card">
+    <button class="modal-x" id="modalX">&times;</button>
+    <img id="modalImg" class="modal-img" alt="">
+    <div id="modalInfo" class="modal-info"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
