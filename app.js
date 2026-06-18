@@ -48,10 +48,20 @@ const TYPE_COLORS = {
   psychic:'#7b1fa2',fighting:'#bf360c',dark:'#37474f',metal:'#607d8b',
   dragon:'#e65100',colorless:'#9e9e9e'
 };
+const COST_COLORS = {
+  草:'#388e3c',炎:'#d32f2f',水:'#1976d2',雷:'#f9a825',超:'#7b1fa2',
+  闘:'#bf360c',悪:'#455a64',鋼:'#607d8b',竜:'#e65100',無:'#9e9e9e',
+  G:'#388e3c',R:'#d32f2f',W:'#1976d2',L:'#f9a825',P:'#7b1fa2',
+  F:'#bf360c',D:'#455a64',M:'#607d8b',N:'#e65100',C:'#9e9e9e'
+};
+const CARD_SIZES = [
+  {w:140,h:196},{w:180,h:252},{w:225,h:315},{w:280,h:392},{w:340,h:476}
+];
 
 const state = {
   screen:'list', lang:localStorage.getItem('deckLang')||'ja',
   viewMode:localStorage.getItem('deckViewMode')||'card',
+  cardSize:Number(localStorage.getItem('deckCardSize')??2),
   cards:[], byId:new Map(),
   decks:[], currentDeckIdx:-1,
   deck:new Map(),
@@ -285,6 +295,11 @@ function cardHtml(card){
   </div>`;
 }
 
+function costDotsHtml(costStr){
+  if(!costStr)return'';
+  return[...costStr].map(c=>{const cl=COST_COLORS[c];return cl?`<span class="lt-cdot" style="background:${cl}"></span>`:''}).join('');
+}
+
 function textCardHtml(card){
   const count=state.deck.get(card.id)||0;
   const tc=TYPE_COLORS[card.typeKey]||'var(--border)';
@@ -293,12 +308,10 @@ function textCardHtml(card){
   if(isPoke){
     const atks=card.attacks.map(a=>{
       if(a.isAbility)return`<div class="lt-atk lt-ability"><div class="lt-atk-row"><span class="lt-label">特性</span><span class="lt-atk-name">${esc(a.name)}</span></div>${a.effect?`<div class="lt-atk-eff">${esc(a.effect)}</div>`:''}</div>`;
-      return`<div class="lt-atk"><div class="lt-atk-row"><span class="lt-atk-name">${esc(a.name)}</span>${a.damage?`<span class="lt-atk-dmg">${esc(a.damage)}</span>`:''}</div>${a.cost?`<div class="lt-atk-cost">${esc(a.cost)}</div>`:''}${a.effect?`<div class="lt-atk-eff">${esc(a.effect)}</div>`:''}</div>`;
+      return`<div class="lt-atk"><div class="lt-atk-row"><span class="lt-atk-name">${esc(a.name)}</span><span class="lt-atk-costs">${costDotsHtml(a.cost)}</span>${a.damage?`<span class="lt-atk-dmg">${esc(a.damage)}</span>`:''}</div>${a.effect?`<div class="lt-atk-eff">${esc(a.effect)}</div>`:''}</div>`;
     }).join('');
-    body=`<div class="lt-header" style="border-left:3px solid ${tc}"><span class="lt-hp">${card.hp?'HP'+card.hp:''}</span>${card.rule&&/ex/i.test(card.rule)?'<span class="lt-ex">ex</span>':''}</div>
-<div class="lt-kind">${esc(card.kind)}${card.evolvesFrom?' ← '+esc(card.evolvesFrom):''}</div>
-<div class="lt-attacks">${atks}</div>
-<div class="lt-stats">${card.weakness?'弱:'+esc(card.weakness):''}${card.resistance?' 抵:'+esc(card.resistance):''}${card.retreat?' 逃:'+esc(card.retreat):''}</div>`;
+    body=`<div class="lt-header" style="border-left:3px solid ${tc}"><div class="lt-hp-block"><span class="lt-hp-label">HP</span><span class="lt-hp-num">${card.hp||''}</span>${card.rule&&/ex/i.test(card.rule)?'<span class="lt-ex">ex</span>':''}</div><div class="lt-desc"><div>${esc(card.kind)}</div>${card.evolvesFrom?`<div>← ${esc(card.evolvesFrom)}</div>`:''}</div></div>
+<div class="lt-attacks">${atks}</div>`;
   }else{
     const eff=card.effects.length?card.effects[0]:'';
     body=`<div class="lt-header"><span class="lt-kind-label">${esc(card.kind)}</span></div>
@@ -508,6 +521,24 @@ function importFromHash(){
   return true;
 }
 
+/* ===== Card Size ===== */
+function applyCardSize(idx){
+  state.cardSize=idx;
+  localStorage.setItem('deckCardSize',idx);
+  for(let i=0;i<5;i++)document.body.classList.toggle('card-size-'+i,i===idx);
+  document.querySelectorAll('.sz-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.size)===idx));
+}
+
+/* ===== Theme ===== */
+function setTheme(t){
+  document.documentElement.dataset.theme=t;
+  localStorage.setItem('deckTheme',t);
+  document.querySelectorAll('.btn-theme').forEach(b=>b.textContent=t==='light'?'🌙':'☀');
+}
+function toggleTheme(){
+  setTheme(document.documentElement.dataset.theme==='light'?'dark':'light');
+}
+
 /* ===== Events ===== */
 function bindEvents(){
   // List screen
@@ -566,6 +597,14 @@ function bindEvents(){
     const blob=new Blob([deckCsv()],{type:'text/csv'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deck.csv';
     document.body.append(a);a.click();a.remove();
+  });
+
+  // Size selector
+  $('sizeSelector').addEventListener('click',e=>{
+    const btn=e.target.closest('.sz-btn');
+    if(!btn)return;
+    applyCardSize(Number(btn.dataset.size));
+    renderLibrary();
   });
 
   // View toggle
@@ -670,6 +709,8 @@ async function init(){
   bindEvents();
   $('langSelect').value=state.lang;
   $('viewToggle').querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===state.viewMode));
+  setTheme(localStorage.getItem('deckTheme')||'dark');
+  applyCardSize(state.cardSize);
   loadDecks();
   await loadCards();
   if(importFromHash()){

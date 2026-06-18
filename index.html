@@ -18,6 +18,7 @@
         <option value="ja">日本語</option>
         <option value="en">English</option>
       </select>
+      <button class="btn-icon btn-theme" onclick="toggleTheme()" title="テーマ切替">☀</button>
     </div>
   </header>
   <div class="list-body">
@@ -56,6 +57,7 @@
       <span id="deckBadge" class="deck-badge">0/60</span>
       <button id="shareBtn" class="btn btn-ghost">共有</button>
       <button id="csvBtn" class="btn btn-ghost">CSV</button>
+      <button class="btn-icon btn-theme" onclick="toggleTheme()" title="テーマ切替">☀</button>
     </div>
   </header>
 
@@ -93,9 +95,18 @@
         <button class="ttag t-colorless" data-type="colorless">無</button>
       </div>
     </div>
-    <div class="view-toggle" id="viewToggle">
-      <button class="vt-btn active" data-view="card">カード</button>
-      <button class="vt-btn" data-view="text">テキスト</button>
+    <div class="filter-bar-tools">
+      <div class="size-selector" id="sizeSelector">
+        <button class="sz-btn" data-size="0"><span class="sz-dot sz-1"></span></button>
+        <button class="sz-btn" data-size="1"><span class="sz-dot sz-2"></span></button>
+        <button class="sz-btn active" data-size="2"><span class="sz-dot sz-3"></span></button>
+        <button class="sz-btn" data-size="3"><span class="sz-dot sz-4"></span></button>
+        <button class="sz-btn" data-size="4"><span class="sz-dot sz-5"></span></button>
+      </div>
+      <div class="view-toggle" id="viewToggle">
+        <button class="vt-btn active" data-view="card">カード</button>
+        <button class="vt-btn" data-view="text">テキスト</button>
+      </div>
     </div>
   </div>
 
