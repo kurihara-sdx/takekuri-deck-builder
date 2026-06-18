@@ -64,8 +64,7 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .deck-zone-label{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
 .deck-cards{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;min-height:var(--card-sm-h)}
 .deck-cards::-webkit-scrollbar{height:10px}.deck-cards::-webkit-scrollbar-track{background:var(--bg);border-radius:5px}.deck-cards::-webkit-scrollbar-thumb{background:var(--border2);border-radius:5px}.deck-cards::-webkit-scrollbar-thumb:hover{background:var(--text3)}
-.deck-validation{font-size:11px;padding-top:4px;min-height:16px}
-.deck-validation .v-ok{color:var(--ok)}.deck-validation .v-warn{color:var(--warn)}.deck-validation .v-err{color:var(--err)}
+.deck-validation{display:none}
 
 /* Deck card slot */
 .dslot{position:relative;flex-shrink:0;width:var(--card-sm-w);height:var(--card-sm-h);border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:.12s}
@@ -79,9 +78,10 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .dslot:hover .dslot-remove{display:flex}
 
 /* ========== Filter Bar ========== */
-.filter-bar{padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px}
-.search-input{width:100%;padding:7px 12px;font-size:13px;background:var(--bg);border:1px solid var(--border)}
-.filter-row{display:flex;gap:4px;flex-wrap:wrap}
+.filter-bar{padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.filter-top{display:flex;gap:6px;align-items:center}
+.search-input{width:160px;flex-shrink:0;padding:5px 10px;font-size:12px;background:var(--bg);border:1px solid var(--border)}
+.filter-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 
 .ftag,.ttag{padding:4px 12px;border-radius:14px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);transition:.15s;user-select:none}
 .ftag:hover,.ttag:hover{border-color:var(--text2)}
