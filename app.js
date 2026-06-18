@@ -139,7 +139,7 @@ function deckTotal(){let s=0;for(const v of state.deck.values())s+=v;return s}
 function countByName(n){let t=0;for(const[id,c]of state.deck){const card=state.byId.get(id);if(card?.name===n)t+=c}return t}
 function aceSpecCount(){let t=0;for(const[id,c]of state.deck)if(isAceSpec(state.byId.get(id)))t+=c;return t}
 function canAdd(card){
-  if(!card||deckTotal()>=MAX_DECK)return false;
+  if(!card)return false;
   if(isAceSpec(card)&&aceSpecCount()>=1)return false;
   return isBasicEnergy(card)||countByName(card.name)<4;
 }
@@ -266,7 +266,6 @@ function cardHtml(card){
   const count=state.deck.get(card.id)||0;
   return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
     <div class="lcard-img-wrap">${imgHtml(card,'lcard-img')}
-      ${count?`<span class="lcard-count">${count}</span>`:''}
       <div class="lcard-controls ${count?'':'hidden'}">
         <button class="lcard-minus" data-remove="${card.id}">−</button>
         <span class="lcard-ctrl-count">${count}</span>
@@ -324,11 +323,6 @@ function updateLibCardBadge(id){
   if(!el)return;
   const count=state.deck.get(id)||0;
   el.classList.toggle('in-deck',count>0);
-  let badge=el.querySelector('.lcard-count');
-  if(count>0){
-    if(badge)badge.textContent=count;
-    else{const wrap=el.querySelector('.lcard-img-wrap');badge=document.createElement('span');badge.className='lcard-count';badge.textContent=count;wrap.appendChild(badge)}
-  }else if(badge)badge.remove();
   const controls=el.querySelector('.lcard-controls');
   if(controls){
     controls.classList.toggle('hidden',count===0);
