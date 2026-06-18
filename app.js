@@ -143,8 +143,8 @@ function canAdd(card){
   if(isAceSpec(card)&&aceSpecCount()>=1)return false;
   return isBasicEnergy(card)||countByName(card.name)<4;
 }
-function addCard(id){const card=state.byId.get(id);if(!canAdd(card))return;state.deck.set(id,(state.deck.get(id)||0)+1);renderDeckZone();updateLibCardBadge(id)}
-function removeCard(id){const cur=state.deck.get(id)||0;if(cur<=1)state.deck.delete(id);else state.deck.set(id,cur-1);renderDeckZone();updateLibCardBadge(id)}
+function addCard(id){const card=state.byId.get(id);if(!canAdd(card))return;state.deck.set(id,(state.deck.get(id)||0)+1);renderDeckZone();updateLibCardBadge(id);saveCurrent()}
+function removeCard(id){const cur=state.deck.get(id)||0;if(cur<=1)state.deck.delete(id);else state.deck.set(id,cur-1);renderDeckZone();updateLibCardBadge(id);saveCurrent()}
 
 /* ===== Deck Storage ===== */
 function loadDecks(){try{state.decks=JSON.parse(localStorage.getItem('ptcg-decks'))||[]}catch{state.decks=[]}}
@@ -222,8 +222,6 @@ function renderDeckZone(){
   $('deckBadge').className='deck-badge'+(total===MAX_DECK?' full':total>MAX_DECK?' over':'');
 
   const msgs=validate();
-  const hasErr=msgs.some(m=>m.lv==='err');
-  $('csvBtn').disabled=!(total===MAX_DECK&&!hasErr);
   $('deckValidation').innerHTML=msgs.map(m=>`<span class="v-${m.lv}">${esc(m.text)}</span>`).join(' · ');
 
   const rows=[...state.deck.entries()].map(([id,count])=>({card:state.byId.get(id),count})).filter(e=>e.card);
@@ -266,7 +264,7 @@ function cardHtml(card){
   const count=state.deck.get(card.id)||0;
   return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
     <div class="lcard-img-wrap">${imgHtml(card,'lcard-img')}
-      <div class="lcard-controls ${count?'':'hidden'}">
+      <div class="lcard-controls">
         <button class="lcard-minus" data-remove="${card.id}">−</button>
         <span class="lcard-ctrl-count">${count}</span>
         <button class="lcard-plus" data-add="${card.id}">＋</button>
@@ -325,7 +323,6 @@ function updateLibCardBadge(id){
   el.classList.toggle('in-deck',count>0);
   const controls=el.querySelector('.lcard-controls');
   if(controls){
-    controls.classList.toggle('hidden',count===0);
     const ctrlCount=controls.querySelector('.lcard-ctrl-count');
     if(ctrlCount)ctrlCount.textContent=count;
   }
@@ -405,6 +402,18 @@ function deckCsv(){
   for(const[id,count]of[...state.deck.entries()].sort((a,b)=>a[0]-b[0]))
     for(let i=0;i<count;i++)ids.push(String(id));
   return ids.join('\n')+'\n';
+}
+
+/* ===== CSV Export ===== */
+function deckCsvComma(){
+  const ids=[];
+  for(const[id,count]of[...state.deck.entries()].sort((a,b)=>a[0]-b[0]))
+    for(let i=0;i<count;i++)ids.push(String(id));
+  return ids.join(',');
+}
+function showCsvExport(){
+  $('csvText').value=deckCsvComma();
+  $('csvOverlay').hidden=false;
 }
 
 /* ===== Share ===== */
@@ -493,7 +502,6 @@ function bindEvents(){
 
   // Builder header
   $('backBtn').addEventListener('click',openList);
-  $('saveBtn').addEventListener('click',()=>{saveCurrent();$('saveBtn').textContent=L().saved;setTimeout(()=>$('saveBtn').textContent=L().save,1200)});
   $('shareBtn').addEventListener('click',showShare);
   $('shareX').addEventListener('click',()=>$('shareOverlay').hidden=true);
   $('shareOverlay').addEventListener('click',e=>{if(e.target===$('shareOverlay'))$('shareOverlay').hidden=true});
@@ -502,7 +510,17 @@ function bindEvents(){
       $('copyUrlBtn').textContent='コピー済';setTimeout(()=>$('copyUrlBtn').textContent='コピー',1200);
     });
   });
-  $('csvBtn').addEventListener('click',()=>{
+  const debouncedSaveName=debounce(()=>saveCurrent(),500);
+  $('deckNameInput').addEventListener('input',debouncedSaveName);
+  $('csvBtn').addEventListener('click',showCsvExport);
+  $('csvX').addEventListener('click',()=>$('csvOverlay').hidden=true);
+  $('csvOverlay').addEventListener('click',e=>{if(e.target===$('csvOverlay'))$('csvOverlay').hidden=true});
+  $('copyCsvBtn').addEventListener('click',()=>{
+    navigator.clipboard.writeText($('csvText').value).then(()=>{
+      $('copyCsvBtn').textContent='コピー済';setTimeout(()=>$('copyCsvBtn').textContent='コピー',1200);
+    });
+  });
+  $('downloadCsvBtn').addEventListener('click',()=>{
     const blob=new Blob([deckCsv()],{type:'text/csv'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='deck.csv';
     document.body.append(a);a.click();a.remove();
@@ -560,7 +578,7 @@ function bindEvents(){
     if(e.target.closest('[data-modal-add]')||e.target.closest('[data-modal-remove]'))return;
     closeModal();
   });
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('importOverlay').hidden=true;$('shareOverlay').hidden=true}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('importOverlay').hidden=true;$('shareOverlay').hidden=true;$('csvOverlay').hidden=true}});
 
   // Drag & Drop
   const deckZone=document.querySelector('.deck-zone');

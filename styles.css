@@ -120,8 +120,8 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .lcard-bottom{padding:5px 6px;background:var(--surface)}
 .lcard-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lcard-sub{font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lcard-controls{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);padding:4px 0}
-.lcard-controls.hidden{display:none}
+.lcard-controls{position:absolute;bottom:0;left:0;right:0;display:none;align-items:center;justify-content:center;gap:4px;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);padding:4px 0}
+.lcard:hover .lcard-controls,.lcard.in-deck .lcard-controls{display:flex}
 .lcard-ctrl-count{color:#fff;font-size:16px;font-weight:800;min-width:24px;text-align:center}
 .lcard-minus,.lcard-plus{width:28px;height:28px;border-radius:50%;font-size:16px;font-weight:700;display:none;align-items:center;justify-content:center;color:#fff;cursor:pointer;border:none;background:none}
 .lcard-minus{background:var(--err)}
@@ -152,6 +152,10 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .share-url-input{flex:1;font-size:11px;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .share-qr{display:flex;justify-content:center;padding:8px;background:var(--bg);border-radius:var(--radius)}
 .share-qr img{width:200px;height:200px;border-radius:4px;image-rendering:pixelated}
+
+/* ========== CSV Export ========== */
+.csv-dl-row{margin-top:12px}
+.csv-dl-btn{width:100%;justify-content:center}
 
 /* ========== Modal ========== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100}

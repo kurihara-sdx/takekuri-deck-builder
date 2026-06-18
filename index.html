@@ -55,8 +55,7 @@
     <div class="build-header-right">
       <span id="deckBadge" class="deck-badge">0/60</span>
       <button id="shareBtn" class="btn btn-ghost">共有</button>
-      <button id="saveBtn" class="btn btn-ghost">保存</button>
-      <button id="csvBtn" class="btn btn-primary" disabled>deck.csv</button>
+      <button id="csvBtn" class="btn btn-ghost">CSV</button>
     </div>
   </header>
 
@@ -127,6 +126,22 @@
     </div>
     <div class="share-qr">
       <img id="shareQr" alt="QR Code">
+    </div>
+  </div>
+</div>
+
+<!-- CSV Export Overlay -->
+<div id="csvOverlay" class="share-overlay" hidden>
+  <div class="share-box">
+    <button class="share-x" id="csvX">&times;</button>
+    <h3>CSV エクスポート</h3>
+    <p class="share-desc">deck.csvをダウンロード、またはカンマ区切りテキストをコピー</p>
+    <div class="share-url-row">
+      <input id="csvText" class="share-url-input" readonly>
+      <button id="copyCsvBtn" class="btn btn-primary">コピー</button>
+    </div>
+    <div class="csv-dl-row">
+      <button id="downloadCsvBtn" class="btn btn-ghost csv-dl-btn">deck.csv ダウンロード</button>
     </div>
   </div>
 </div>
