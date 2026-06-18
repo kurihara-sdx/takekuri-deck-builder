@@ -292,17 +292,16 @@ function textCardHtml(card){
   let body='';
   if(isPoke){
     const atks=card.attacks.map(a=>{
-      if(a.isAbility)return`<div class="lt-atk lt-ability"><div class="lt-atk-row"><span class="lt-label">特性</span><span class="lt-atk-name">${esc(a.name)}</span></div>${a.effect?`<div class="lt-atk-eff">${esc(a.effect).slice(0,60)}</div>`:''}</div>`;
-      return`<div class="lt-atk"><div class="lt-atk-row"><span class="lt-atk-name">${esc(a.name)}</span>${a.damage?`<span class="lt-atk-dmg">${esc(a.damage)}</span>`:''}</div>${a.cost?`<div class="lt-atk-cost">${esc(a.cost)}</div>`:''}</div>`;
+      if(a.isAbility)return`<div class="lt-atk lt-ability"><div class="lt-atk-row"><span class="lt-label">特性</span><span class="lt-atk-name">${esc(a.name)}</span></div>${a.effect?`<div class="lt-atk-eff">${esc(a.effect)}</div>`:''}</div>`;
+      return`<div class="lt-atk"><div class="lt-atk-row"><span class="lt-atk-name">${esc(a.name)}</span>${a.damage?`<span class="lt-atk-dmg">${esc(a.damage)}</span>`:''}</div>${a.cost?`<div class="lt-atk-cost">${esc(a.cost)}</div>`:''}${a.effect?`<div class="lt-atk-eff">${esc(a.effect)}</div>`:''}</div>`;
     }).join('');
-    body=`<div class="lt-header" style="border-left:3px solid ${tc}"><span class="lt-name">${esc(card.name)}</span>${card.hp?`<span class="lt-hp">HP${card.hp}</span>`:''}</div>
-<div class="lt-kind">${esc(card.kind)}${card.evolvesFrom?' ← '+esc(card.evolvesFrom):''}${card.rule&&/ex/i.test(card.rule)?' <span class="lt-ex">ex</span>':''}</div>
+    body=`<div class="lt-header" style="border-left:3px solid ${tc}"><span class="lt-hp">${card.hp?'HP'+card.hp:''}</span>${card.rule&&/ex/i.test(card.rule)?'<span class="lt-ex">ex</span>':''}</div>
+<div class="lt-kind">${esc(card.kind)}${card.evolvesFrom?' ← '+esc(card.evolvesFrom):''}</div>
 <div class="lt-attacks">${atks}</div>
 <div class="lt-stats">${card.weakness?'弱:'+esc(card.weakness):''}${card.resistance?' 抵:'+esc(card.resistance):''}${card.retreat?' 逃:'+esc(card.retreat):''}</div>`;
   }else{
     const eff=card.effects.length?card.effects[0]:'';
-    body=`<div class="lt-header"><span class="lt-name">${esc(card.name)}</span></div>
-<div class="lt-kind">${esc(card.kind)}</div>
+    body=`<div class="lt-header"><span class="lt-kind-label">${esc(card.kind)}</span></div>
 <div class="lt-effect">${esc(eff)}</div>`;
   }
   return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
@@ -312,6 +311,10 @@ function textCardHtml(card){
         <span class="lcard-ctrl-count">${count}</span>
         <button class="lcard-plus" data-add="${card.id}">＋</button>
       </div>
+    </div>
+    <div class="lcard-bottom">
+      <div class="lcard-name">${esc(card.name)}</div>
+      <div class="lcard-sub">${card.hp?'HP'+card.hp+' ':''}${esc(card.kind)}</div>
     </div>
   </div>`;
 }
