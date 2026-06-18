@@ -297,7 +297,12 @@ function cardHtml(card){
 
 function costDotsHtml(costStr){
   if(!costStr)return'';
-  return[...costStr].map(c=>{const cl=COST_COLORS[c];return cl?`<span class="lt-cdot" style="background:${cl}"></span>`:''}).join('');
+  return[...costStr].map(c=>{
+    const cl=COST_COLORS[c];
+    if(!cl)return'';
+    if(c==='無'||c==='C')return`<span class="lt-cdot" style="background:${cl}"></span>`;
+    return`<span class="lt-ctext" style="color:${cl}">${c}</span>`;
+  }).join('');
 }
 
 function textCardHtml(card){
