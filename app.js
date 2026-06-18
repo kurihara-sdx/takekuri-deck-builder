@@ -68,18 +68,7 @@ function clean(v){const s=(v||'').trim();return s==='n/a'?'':s}
 
 /* ===== Image Map ===== */
 async function buildImageMap(){
-  const res=await fetch(LANG.en.csvPath);if(!res.ok)return;
-  const rows=parseCsv((await res.text()).replace(/^﻿/,''));
-  const hdr=rows.shift();const c=LANG.en.cols;
-  const idI=hdr.indexOf(c.id),expI=hdr.indexOf(c.exp),numI=hdr.indexOf(c.num);
-  const seen=new Set();
-  for(const row of rows){
-    const id=Number((row[idI]||'').trim());
-    if(!Number.isFinite(id)||seen.has(id))continue;seen.add(id);
-    const exp=(row[expI]||'').trim(),num=(row[numI]||'').trim().split('/')[0].replace(/^0+/,'')||'0';
-    const setId=EN_SET_MAP[exp];
-    if(setId)imgUrlById.set(id,`https://images.pokemontcg.io/${setId}/${num}.png`);
-  }
+  for(let id=1;id<=1267;id++)imgUrlById.set(id,`cards/${id}.jpg`);
 }
 
 /* ===== Card Categories ===== */
