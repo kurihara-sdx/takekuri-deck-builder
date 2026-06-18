@@ -318,16 +318,15 @@ function textCardHtml(card){
 <div class="lt-effect">${esc(eff)}</div>`;
   }
   return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
+    <div class="lcard-bottom lcard-top">
+      <div class="lcard-name">${esc(card.name)}</div>
+    </div>
     <div class="lcard-img-wrap"><div class="lcard-text-body">${body}</div>
       <div class="lcard-controls">
         <button class="lcard-minus" data-remove="${card.id}">−</button>
         <span class="lcard-ctrl-count">${count}</span>
         <button class="lcard-plus" data-add="${card.id}">＋</button>
       </div>
-    </div>
-    <div class="lcard-bottom">
-      <div class="lcard-name">${esc(card.name)}</div>
-      <div class="lcard-sub">${card.hp?'HP'+card.hp+' ':''}${esc(card.kind)}</div>
     </div>
   </div>`;
 }
