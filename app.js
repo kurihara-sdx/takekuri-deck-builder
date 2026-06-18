@@ -43,8 +43,15 @@ const LANG = {
   },
 };
 
+const TYPE_COLORS = {
+  grass:'#388e3c',fire:'#d32f2f',water:'#1976d2',lightning:'#f9a825',
+  psychic:'#7b1fa2',fighting:'#bf360c',dark:'#37474f',metal:'#607d8b',
+  dragon:'#e65100',colorless:'#9e9e9e'
+};
+
 const state = {
   screen:'list', lang:localStorage.getItem('deckLang')||'ja',
+  viewMode:localStorage.getItem('deckViewMode')||'card',
   cards:[], byId:new Map(),
   decks:[], currentDeckIdx:-1,
   deck:new Map(),
@@ -261,6 +268,7 @@ function renderLibrary(){
 }
 
 function cardHtml(card){
+  if(state.viewMode==='text')return textCardHtml(card);
   const count=state.deck.get(card.id)||0;
   return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
     <div class="lcard-img-wrap">${imgHtml(card,'lcard-img')}
@@ -273,6 +281,37 @@ function cardHtml(card){
     <div class="lcard-bottom">
       <div class="lcard-name">${esc(card.name)}</div>
       <div class="lcard-sub">${card.hp?'HP'+card.hp+' ':''}${esc(card.kind)}</div>
+    </div>
+  </div>`;
+}
+
+function textCardHtml(card){
+  const count=state.deck.get(card.id)||0;
+  const tc=TYPE_COLORS[card.typeKey]||'var(--border)';
+  const isPoke=card.cats.includes('pokemon');
+  let body='';
+  if(isPoke){
+    const atks=card.attacks.map(a=>{
+      if(a.isAbility)return`<div class="lt-atk lt-ability"><div class="lt-atk-row"><span class="lt-label">特性</span><span class="lt-atk-name">${esc(a.name)}</span></div>${a.effect?`<div class="lt-atk-eff">${esc(a.effect).slice(0,60)}</div>`:''}</div>`;
+      return`<div class="lt-atk"><div class="lt-atk-row"><span class="lt-atk-name">${esc(a.name)}</span>${a.damage?`<span class="lt-atk-dmg">${esc(a.damage)}</span>`:''}</div>${a.cost?`<div class="lt-atk-cost">${esc(a.cost)}</div>`:''}</div>`;
+    }).join('');
+    body=`<div class="lt-header" style="border-left:3px solid ${tc}"><span class="lt-name">${esc(card.name)}</span>${card.hp?`<span class="lt-hp">HP${card.hp}</span>`:''}</div>
+<div class="lt-kind">${esc(card.kind)}${card.evolvesFrom?' ← '+esc(card.evolvesFrom):''}${card.rule&&/ex/i.test(card.rule)?' <span class="lt-ex">ex</span>':''}</div>
+<div class="lt-attacks">${atks}</div>
+<div class="lt-stats">${card.weakness?'弱:'+esc(card.weakness):''}${card.resistance?' 抵:'+esc(card.resistance):''}${card.retreat?' 逃:'+esc(card.retreat):''}</div>`;
+  }else{
+    const eff=card.effects.length?card.effects[0]:'';
+    body=`<div class="lt-header"><span class="lt-name">${esc(card.name)}</span></div>
+<div class="lt-kind">${esc(card.kind)}</div>
+<div class="lt-effect">${esc(eff)}</div>`;
+  }
+  return`<div class="lcard ${count?'in-deck':''}" data-id="${card.id}" draggable="true">
+    <div class="lcard-img-wrap"><div class="lcard-text-body">${body}</div>
+      <div class="lcard-controls">
+        <button class="lcard-minus" data-remove="${card.id}">−</button>
+        <span class="lcard-ctrl-count">${count}</span>
+        <button class="lcard-plus" data-add="${card.id}">＋</button>
+      </div>
     </div>
   </div>`;
 }
@@ -526,6 +565,16 @@ function bindEvents(){
     document.body.append(a);a.click();a.remove();
   });
 
+  // View toggle
+  $('viewToggle').addEventListener('click',e=>{
+    const btn=e.target.closest('.vt-btn');
+    if(!btn||btn.dataset.view===state.viewMode)return;
+    state.viewMode=btn.dataset.view;
+    localStorage.setItem('deckViewMode',state.viewMode);
+    $('viewToggle').querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active',b===btn));
+    renderLibrary();
+  });
+
   // Filter bar
   const debouncedSearch=debounce(()=>{state.query=$('searchInput').value.trim();renderLibrary()},150);
   $('searchInput').addEventListener('input',debouncedSearch);
@@ -617,6 +666,7 @@ async function loadCards(){
 async function init(){
   bindEvents();
   $('langSelect').value=state.lang;
+  $('viewToggle').querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===state.viewMode));
   loadDecks();
   await loadCards();
   if(importFromHash()){
