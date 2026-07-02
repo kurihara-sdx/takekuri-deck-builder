@@ -89,6 +89,12 @@ function parseCsv(text){
   row.push(field);if(row.some(v=>v!==''))rows.push(row);return rows;
 }
 function clean(v){const s=(v||'').trim();return s==='n/a'?'':s}
+function normalizeSearchText(value){
+  return String(value??'')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\u30a1-\u30fa]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
+}
 
 /* ===== Image Map ===== */
 async function buildImageMap(){
@@ -140,9 +146,9 @@ function buildCards(csvText){
   }
   return[...grouped.values()].map(card=>{
     card.effects=[...card.effects];
-    card.searchText=[card.id,card.name,card.expansion,card.number,card.kind,card.rule,card.type,card.hp,
+    card.searchText=normalizeSearchText([card.id,card.name,card.expansion,card.number,card.kind,card.rule,card.type,card.hp,
       ...card.effects,...card.attacks.flatMap(a=>[a.name,a.cost,a.damage,a.effect])
-    ].filter(Boolean).join(' ').toLowerCase();
+    ].filter(Boolean).join(' '));
     card.imgUrl=imgUrlById.get(card.id)||null;
     assignCategory(card);
     return card;
@@ -176,7 +182,7 @@ function saveCurrent(){
 
 /* ===== Filtering ===== */
 function visibleCards(){
-  const q=state.query.toLowerCase();
+  const q=normalizeSearchText(state.query);
   const hasCat=state.activeCats.size>0;
   const hasType=state.activeTypes.size>0;
   return state.cards.filter(c=>{
