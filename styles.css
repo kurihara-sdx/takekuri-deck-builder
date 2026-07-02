@@ -193,6 +193,7 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .import-overlay[hidden]{display:none}
 .import-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;width:400px;max-width:95%}
 .import-box h3{font-size:15px;margin-bottom:10px}
+.import-code-input{width:100%;margin-bottom:10px}
 .import-box textarea{width:100%;resize:vertical;margin-bottom:10px}
 .import-desc{font-size:12px;color:var(--text2);margin-bottom:12px}
 .import-file-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -221,19 +222,19 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .modal-open .build-header,.modal-open .filter-bar,.modal-open .library-zone{filter:blur(4px);pointer-events:none}
 .modal-open .deck-zone{position:relative;z-index:101}
 .modal-overlay[hidden]{display:none}
-.modal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:680px;width:95%;height:420px;position:relative;display:flex;gap:16px;padding:20px;cursor:pointer}
+.modal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:860px;width:95%;height:min(620px,90vh);position:relative;display:flex;gap:22px;padding:24px;cursor:pointer}
 .modal-x{position:absolute;top:8px;right:12px;font-size:22px;color:var(--text2);z-index:1}.modal-x:hover{color:var(--text)}
-.modal-img{width:240px;flex-shrink:0;border-radius:8px;object-fit:contain;background:var(--bg);height:100%}
+.modal-img{width:min(360px,42vw);flex-shrink:0;border-radius:8px;object-fit:contain;background:var(--bg);height:100%}
 .modal-info{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto}
-.modal-info h3{font-size:17px;margin-bottom:4px}
+.modal-info h3{font-size:22px;margin-bottom:6px;padding-right:28px}
 .mi-id{font-size:11px;color:var(--text2);margin-bottom:8px}
 .mi-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
 .mi-chip{background:var(--surface2);border:1px solid var(--border);padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600}
 .mi-chip.ace{background:#7c3aed;border-color:#7c3aed;color:#fff}
-.mi-atk{margin-bottom:6px;padding:8px;background:var(--bg);border-radius:6px}
-.mi-atk-head{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-bottom:2px}
-.mi-atk-head .dmg{color:var(--accent);font-size:15px}
-.mi-atk p{font-size:11px;color:var(--text2);line-height:1.5}
+.mi-atk{margin-bottom:8px;padding:10px;background:var(--bg);border-radius:6px}
+.mi-atk-head{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;margin-bottom:4px}
+.mi-atk-head .dmg{color:var(--accent);font-size:17px}
+.mi-atk p{font-size:12px;color:var(--text2);line-height:1.6}
 .mi-actions{display:flex;gap:8px;margin-top:auto;padding-top:12px;flex-shrink:0;align-items:center;justify-content:center}
 .mi-count{font-size:24px;font-weight:900;min-width:40px;text-align:center;color:var(--text)}
 .mi-minus,.mi-plus{width:48px;height:48px;border-radius:50%;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;padding:0}

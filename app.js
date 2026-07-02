@@ -1,5 +1,6 @@
 const MAX_DECK = 60;
 const CARD_PAGE_SIZE = 40;
+const OFFICIAL_DECK_FIELDS = ['deck_pke','deck_gds','deck_tool','deck_tech','deck_sup','deck_sta','deck_ene','deck_ajs'];
 
 function debounce(fn, ms) {
   let timer;
@@ -94,6 +95,18 @@ function normalizeSearchText(value){
     .normalize('NFKC')
     .toLowerCase()
     .replace(/[\u30a1-\u30fa]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60));
+}
+function normalizeImportName(value){
+  return normalizeSearchText(value)
+    .replace(/ace spec/g,'')
+    .replace(/[【】\[\]{}（）()\s・･]/g,'')
+    .trim();
+}
+function normalizeImportCode(value){
+  return String(value??'').normalize('NFKC').trim().toUpperCase();
+}
+function normalizeImportNumber(value){
+  return normalizeImportCode(value).replace(/\s+/g,'');
 }
 
 /* ===== Image Map ===== */
@@ -461,12 +474,149 @@ function duplicateDeck(idx){
   state.decks.push({name:d.name+' (copy)',cards:[...d.cards.map(([id,c])=>[id,c])]});
   saveDecks();renderList();
 }
+function createImportedDeck(name,cards){
+  state.decks.push({name,cards});
+  saveDecks();
+  $('listImportOverlay').hidden=true;
+  openBuilder(state.decks.length-1);
+}
 
 function deckCsv(){
   const ids=[];
   for(const[id,count]of[...state.deck.entries()].sort((a,b)=>a[0]-b[0]))
     for(let i=0;i<count;i++)ids.push(String(id));
   return ids.join('\n')+'\n';
+}
+
+/* ===== Official Deck Code Import ===== */
+function extractOfficialDeckCode(value){
+  const s=String(value||'').trim();
+  const fromQuery=s.match(/[?&]deckID=([A-Za-z0-9-]+)/i);
+  if(fromQuery)return fromQuery[1];
+  const fromPath=s.match(/\/deckID\/([A-Za-z0-9-]+)/i);
+  if(fromPath)return fromPath[1];
+  const code=s.match(/\b[A-Za-z0-9]{2,}-[A-Za-z0-9]{2,}-[A-Za-z0-9]{2,}\b/);
+  return code?code[0]:'';
+}
+function decodeJsString(value){
+  return String(value||'').replace(/\\(['"\\])/g,'$1');
+}
+function stripOfficialNameMeta(name){
+  return String(name||'').replace(/\((?:ACE SPEC|エーススペック)\)$/i,'').trim();
+}
+function parseOfficialCardMeta(displayName,nameAlt,pict){
+  const meta={name:stripOfficialNameMeta(nameAlt||displayName),expansion:'',number:''};
+  const m=String(displayName||'').match(/^(.*)\(([^()]+)\)$/);
+  if(m){
+    const inside=m[2].trim();
+    const parts=inside.split(/\s+/);
+    if(parts.length>=2&&/\d/.test(parts.slice(1).join(''))){
+      meta.name=stripOfficialNameMeta(nameAlt||m[1]);
+      meta.expansion=parts[0];
+      meta.number=parts.slice(1).join(' ');
+    }else{
+      meta.name=stripOfficialNameMeta(nameAlt||m[1]);
+    }
+  }
+  if(!meta.expansion&&pict){
+    const pm=String(pict).match(/\/large\/([^/]+)\//);
+    if(pm)meta.expansion=pm[1];
+  }
+  return meta;
+}
+function parseOfficialDeckHtml(html,deckCode){
+  const err=String(html).match(/PCGDECK\.deckIDErrCheck\s*=\s*(\d+)/);
+  if(err&&err[1]==='9')throw new Error(`デッキコード[${deckCode}]のレシピが見つかりませんでした`);
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const items=new Map();
+  for(const m of html.matchAll(/PCGDECK\.searchItemName\[(\d+)\]\s*=\s*'((?:\\.|[^'\\])*)';/g)){
+    const item=items.get(m[1])||{officialId:m[1]};
+    item.displayName=decodeJsString(m[2]);
+    items.set(m[1],item);
+  }
+  for(const m of html.matchAll(/PCGDECK\.searchItemNameAlt\[(\d+)\]\s*=\s*'((?:\\.|[^'\\])*)';/g)){
+    const item=items.get(m[1])||{officialId:m[1]};
+    item.nameAlt=decodeJsString(m[2]);
+    items.set(m[1],item);
+  }
+  for(const m of html.matchAll(/PCGDECK\.searchItemCardPict\[(\d+)\]\s*=\s*'((?:\\.|[^'\\])*)';/g)){
+    const item=items.get(m[1])||{officialId:m[1]};
+    item.pict=decodeJsString(m[2]);
+    items.set(m[1],item);
+  }
+  const deckItems=[];
+  for(const field of OFFICIAL_DECK_FIELDS){
+    const value=doc.getElementById(field)?.value||'';
+    if(!value)continue;
+    for(const part of value.split('-')){
+      const[id,count]=part.split('_');
+      const item=items.get(id)||{officialId:id};
+      const meta=parseOfficialCardMeta(item.displayName||item.nameAlt||id,item.nameAlt,item.pict);
+      deckItems.push({...item,...meta,count:Number(count)||0});
+    }
+  }
+  if(!deckItems.length)throw new Error(`デッキコード[${deckCode}]からカードを取得できませんでした`);
+  return deckItems;
+}
+function buildImportIndex(){
+  const exact=new Map(),names=new Map();
+  for(const card of state.cards){
+    const nameKey=normalizeImportName(card.name);
+    const exactKey=[nameKey,normalizeImportCode(card.expansion),normalizeImportNumber(card.number)].join('|');
+    exact.set(exactKey,card);
+    if(!names.has(nameKey))names.set(nameKey,[]);
+    names.get(nameKey).push(card);
+  }
+  return{exact,names};
+}
+function findImportedCard(item,index){
+  const nameKey=normalizeImportName(item.name);
+  const exp=normalizeImportCode(item.expansion);
+  const num=normalizeImportNumber(item.number);
+  if(exp&&num){
+    const exact=index.exact.get([nameKey,exp,num].join('|'));
+    if(exact)return exact;
+  }
+  const byName=index.names.get(nameKey)||[];
+  if(byName.length===1)return byName[0];
+  if(exp){
+    const sameExp=byName.filter(card=>normalizeImportCode(card.expansion)===exp);
+    if(sameExp.length===1)return sameExp[0];
+  }
+  return null;
+}
+function resolveOfficialDeckItems(items){
+  const index=buildImportIndex(),deck=new Map(),missing=[];
+  for(const item of items){
+    if(!item.count)continue;
+    const card=findImportedCard(item,index);
+    if(card)deck.set(card.id,(deck.get(card.id)||0)+item.count);
+    else missing.push(item);
+  }
+  return{cards:[...deck.entries()],missing};
+}
+function missingOfficialItemsMessage(missing){
+  if(!missing.length)return'';
+  const shown=missing.slice(0,18).map(item=>{
+    const meta=[item.expansion,item.number].filter(Boolean).join(' ');
+    return `・${item.name}${meta?` (${meta})`:''} x${item.count}`;
+  }).join('\n');
+  const rest=missing.length>18?`\nほか ${missing.length-18} 件`:'';
+  return `今回のカードプールにないカードがあります。\n見つかったカードだけで構築しました。\n\n${shown}${rest}`;
+}
+async function importOfficialDeckCode(deckCode){
+  const url=`https://www.pokemon-card.com/deck/deck.html?deckID=${encodeURIComponent(deckCode)}`;
+  const res=await fetch(url);
+  if(!res.ok)throw new Error('公式デッキコードの取得に失敗しました');
+  const items=parseOfficialDeckHtml(await res.text(),deckCode);
+  const resolved=resolveOfficialDeckItems(items);
+  if(!resolved.cards.length){
+    alert(`このカードプールに追加できるカードがありませんでした。\nデッキコード: ${deckCode}`);
+    return;
+  }
+  createImportedDeck(`公式 ${deckCode}`,resolved.cards);
+  const msg=missingOfficialItemsMessage(resolved.missing);
+  if(msg)setTimeout(()=>alert(msg),50);
 }
 
 /* ===== CSV Export ===== */
@@ -561,7 +711,7 @@ function bindEvents(){
   $('newDeckBtn').addEventListener('click',createDeck);
 
   // List import
-  $('importDeckBtn').addEventListener('click',()=>{$('listImportArea').value='';$('csvFileName').textContent='';$('csvFileInput').value='';$('listImportOverlay').hidden=false});
+  $('importDeckBtn').addEventListener('click',()=>{$('officialDeckCodeInput').value='';$('listImportArea').value='';$('csvFileName').textContent='';$('csvFileInput').value='';$('listImportOverlay').hidden=false});
   $('listImportCancel').addEventListener('click',()=>$('listImportOverlay').hidden=true);
   $('listImportOverlay').addEventListener('click',e=>{if(e.target===$('listImportOverlay'))$('listImportOverlay').hidden=true});
   $('csvFileInput').addEventListener('change',e=>{
@@ -571,16 +721,30 @@ function bindEvents(){
     reader.onload=()=>{$('listImportArea').value=reader.result.trim()};
     reader.readAsText(file);
   });
-  $('listImportApply').addEventListener('click',()=>{
-    const text=$('listImportArea').value.trim();if(!text)return;
-    const ids=text.split(/[\s,]+/).map(s=>Number(s.trim())).filter(v=>Number.isFinite(v)&&v>0);
-    if(!ids.length)return;
-    const deck=new Map();
-    ids.forEach(id=>{deck.set(id,(deck.get(id)||0)+1)});
-    state.decks.push({name:L().newDeck,cards:[...deck.entries()]});
-    saveDecks();
-    $('listImportOverlay').hidden=true;
-    openBuilder(state.decks.length-1);
+  $('listImportApply').addEventListener('click',async()=>{
+    const btn=$('listImportApply');
+    const text=$('listImportArea').value.trim();
+    const deckCode=extractOfficialDeckCode($('officialDeckCodeInput').value)||extractOfficialDeckCode(text);
+    if(!deckCode&&!text)return;
+    btn.disabled=true;
+    const oldText=btn.textContent;
+    btn.textContent=deckCode?'取得中':'デッキ作成';
+    try{
+      if(deckCode){
+        await importOfficialDeckCode(deckCode);
+        return;
+      }
+      const ids=text.split(/[\s,]+/).map(s=>Number(s.trim())).filter(v=>Number.isFinite(v)&&v>0);
+      if(!ids.length)return;
+      const deck=new Map();
+      ids.forEach(id=>{deck.set(id,(deck.get(id)||0)+1)});
+      createImportedDeck(L().newDeck,[...deck.entries()]);
+    }catch(err){
+      alert(err?.message||'デッキ読み込みに失敗しました');
+    }finally{
+      btn.disabled=false;
+      btn.textContent=oldText;
+    }
   });
 
   // Builder header
@@ -679,7 +843,7 @@ function bindEvents(){
     if(e.target.closest('[data-modal-add]')||e.target.closest('[data-modal-remove]'))return;
     closeModal();
   });
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('importOverlay').hidden=true;$('shareOverlay').hidden=true;$('csvOverlay').hidden=true}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('importOverlay').hidden=true;$('listImportOverlay').hidden=true;$('shareOverlay').hidden=true;$('csvOverlay').hidden=true}});
 
   // Drag & Drop
   const deckZone=document.querySelector('.deck-zone');

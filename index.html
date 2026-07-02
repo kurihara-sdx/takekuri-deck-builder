@@ -34,7 +34,8 @@
 <div id="listImportOverlay" class="import-overlay" hidden>
   <div class="import-box">
     <h3>デッキ読み込み</h3>
-    <p class="import-desc">CSVファイルをアップロード、またはカードIDをカンマ区切り/1行1IDで入力</p>
+    <p class="import-desc">公式デッキコード、CSVファイル、またはカードIDを入力</p>
+    <input id="officialDeckCodeInput" class="import-code-input" type="text" placeholder="公式デッキコード 例: 9QggQH-GvByBm-QQggHn" spellcheck="false">
     <div class="import-file-row">
       <label class="btn btn-ghost import-file-label" for="csvFileInput">CSVファイルを選択</label>
       <input id="csvFileInput" type="file" accept=".csv,.txt" hidden>
