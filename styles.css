@@ -219,10 +219,10 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 
 /* ========== Modal ========== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100}
-.modal-open .build-header,.modal-open .filter-bar,.modal-open .library-zone{filter:blur(4px);pointer-events:none}
-.modal-open .deck-zone{position:relative;z-index:101}
+.modal-open .build-header,.modal-open .deck-zone,.modal-open .filter-bar,.modal-open .library-zone{filter:blur(4px);pointer-events:none}
 .modal-overlay[hidden]{display:none}
 .modal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;max-width:860px;width:95%;height:min(620px,90vh);position:relative;display:flex;gap:22px;padding:24px;cursor:pointer}
+.modal-size-selector{position:absolute;top:10px;right:44px;z-index:2;background:rgba(0,0,0,.18);border:1px solid var(--border);border-radius:var(--radius);padding:2px}
 .modal-x{position:absolute;top:8px;right:12px;font-size:22px;color:var(--text2);z-index:1}.modal-x:hover{color:var(--text)}
 .modal-img{width:min(360px,42vw);flex-shrink:0;border-radius:8px;object-fit:contain;background:var(--bg);height:100%}
 .modal-info{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto}
@@ -239,6 +239,16 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .mi-count{font-size:24px;font-weight:900;min-width:40px;text-align:center;color:var(--text)}
 .mi-minus,.mi-plus{width:48px;height:48px;border-radius:50%;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;padding:0}
 .mi-minus{cursor:pointer}.mi-plus{cursor:pointer}
+body.modal-size-0 .modal-card{max-width:620px;height:min(430px,82vh);gap:16px;padding:18px}
+body.modal-size-0 .modal-img{width:min(220px,34vw)}
+body.modal-size-1 .modal-card{max-width:740px;height:min(520px,86vh);gap:18px;padding:20px}
+body.modal-size-1 .modal-img{width:min(290px,38vw)}
+body.modal-size-2 .modal-card{max-width:860px;height:min(620px,90vh)}
+body.modal-size-2 .modal-img{width:min(360px,42vw)}
+body.modal-size-3 .modal-card{max-width:min(1080px,82vw);height:min(700px,86vh);gap:24px;padding:26px}
+body.modal-size-3 .modal-img{width:min(440px,42vw)}
+body.modal-size-4 .modal-card{max-width:min(1280px,88vw);height:min(760px,88vh);gap:26px;padding:28px}
+body.modal-size-4 .modal-img{width:min(520px,44vw)}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -291,6 +301,7 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-
 
   /* Modal: no image on mobile */
   .modal-card{flex-direction:column;padding:12px;height:auto;max-height:90vh;overflow-y:auto}
+  body.modal-size-0 .modal-card,body.modal-size-1 .modal-card,body.modal-size-2 .modal-card,body.modal-size-3 .modal-card,body.modal-size-4 .modal-card{height:auto;max-height:90vh;padding:12px;gap:12px}
   .modal-img{display:none}
   .mi-actions .btn{min-height:44px;font-size:14px}
 

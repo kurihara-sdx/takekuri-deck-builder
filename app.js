@@ -63,6 +63,7 @@ const state = {
   screen:'list', lang:localStorage.getItem('deckLang')||'ja',
   viewMode:localStorage.getItem('deckViewMode')||'card',
   cardSize:Number(localStorage.getItem('deckCardSize')??2),
+  modalSize:Number(localStorage.getItem('deckModalSize')??2),
   cards:[], byId:new Map(),
   decks:[], currentDeckIdx:-1,
   deck:new Map(),
@@ -686,7 +687,15 @@ function applyCardSize(idx){
   state.cardSize=idx;
   localStorage.setItem('deckCardSize',idx);
   for(let i=0;i<5;i++)document.body.classList.toggle('card-size-'+i,i===idx);
-  document.querySelectorAll('.sz-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.size)===idx));
+  document.querySelectorAll('.sz-btn[data-size]').forEach(b=>b.classList.toggle('active',Number(b.dataset.size)===idx));
+}
+function applyModalSize(idx){
+  const raw=Number(idx);
+  const next=Number.isFinite(raw)?Math.max(0,Math.min(4,raw)):2;
+  state.modalSize=next;
+  localStorage.setItem('deckModalSize',next);
+  for(let i=0;i<5;i++)document.body.classList.toggle('modal-size-'+i,i===next);
+  document.querySelectorAll('.msz-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.modalSize)===next));
 }
 
 /* ===== Theme ===== */
@@ -780,6 +789,12 @@ function bindEvents(){
     applyCardSize(Number(btn.dataset.size));
     renderLibrary();
   });
+  $('modalSizeSelector').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-modal-size]');
+    if(!btn)return;
+    e.stopPropagation();
+    applyModalSize(Number(btn.dataset.modalSize));
+  });
 
   // View toggle
   $('viewToggle').addEventListener('click',e=>{
@@ -840,7 +855,7 @@ function bindEvents(){
   // Modal
   function closeModal(){$('modal').hidden=true;$('buildScreen').classList.remove('modal-open')}
   $('modal').addEventListener('click',e=>{
-    if(e.target.closest('[data-modal-add]')||e.target.closest('[data-modal-remove]'))return;
+    if(e.target.closest('[data-modal-add]')||e.target.closest('[data-modal-remove]')||e.target.closest('[data-modal-size]'))return;
     closeModal();
   });
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();$('importOverlay').hidden=true;$('listImportOverlay').hidden=true;$('shareOverlay').hidden=true;$('csvOverlay').hidden=true}});
@@ -885,6 +900,7 @@ async function init(){
   $('viewToggle').querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===state.viewMode));
   setTheme(localStorage.getItem('deckTheme')||'dark');
   applyCardSize(state.cardSize);
+  applyModalSize(state.modalSize);
   loadDecks();
   await loadCards();
   if(importFromHash()){
